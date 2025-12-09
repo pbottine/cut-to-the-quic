@@ -1,14 +1,10 @@
 # `xquic` Equivalent Substring Attack
 
-This directory contains a proof-of-concept equivalent substring collision attack against the hash function used in Alibaba's `xquic` implementation.
-
-## Vulnerability Status
-
-**Note**: This vulnerability has been responsibly disclosed to the `xquic` maintainers and has been fixed in recent versions of `xquic`. This proof-of-concept is provided for educational purposes to help security researchers understand the attack technique.
+This directory contains a proof-of-concept equivalent substring collision attack against the hash function originally used in Alibaba's `xquic` implementation (prior to version 1.8.2).
 
 ## Overview
 
-The attack exploits properties of the hash function to generate equivalent substrings that produce the same hash value, allowing for collision attacks that can degrade hash table performance.
+The attack exploits properties of the hash function to generate equivalent substrings that produce the same hash value, allowing for very efficient generation of a large number of collisions.
 
 ## Requirements
 

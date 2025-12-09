@@ -150,7 +150,6 @@ std::vector<std::pair<uint32_t, uint32_t>> compute_all_differences(const uint8_t
 
     uint32_t hash_result = XXHash32::hash_no_final_bit_mixing(input_array, 8, myseed);
 
-    std::cout << "Hash result: 0x" << std::hex << hash_result << std::dec << std::endl;
     uint32_t total_loop = 4294967295;  // Search through all possible 32-bit differences
     uint32_t total_count = 0;
 
@@ -187,14 +186,6 @@ std::vector<std::pair<uint32_t, uint32_t>> compute_all_differences(const uint8_t
         }
     }
 
-    // Print summary of successful differences
-    std::cout << "\n=== Summary ===" << std::endl;
-    std::cout << "Total successful differences found: " << successful_diffs.size() << std::endl;
-    std::cout << "Successful (diff1, diff2) pairs:" << std::endl;
-    for (const auto& pair : successful_diffs) {
-        std::cout << "  (0x" << std::hex << pair.first << ", 0x" << pair.second << ")" << std::dec << std::endl;
-    }
-
     return successful_diffs;
 }
 
@@ -203,17 +194,20 @@ int main(int argc, char* argv[]) {
     // Parse command line arguments
     size_t max_pairs = DEFAULT_MAX_PAIRS;
     bool run_test = false;
+    bool quiet = false;
 
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
         if (arg == "--test") {
             run_test = true;
+        } else if (arg == "--quiet" || arg == "-q") {
+            quiet = true;
         } else {
             // Assume it's the max_pairs argument
             long long input = std::atoll(argv[i]);
             if (input <= 0) {
                 std::cerr << "Error: max_pairs must be a positive integer" << std::endl;
-                std::cerr << "Usage: " << argv[0] << " [max_pairs] [--test]" << std::endl;
+                std::cerr << "Usage: " << argv[0] << " [max_pairs] [--test] [--quiet|-q]" << std::endl;
                 return 1;
             }
             // Upper bound by UINT32_MAX since that's the search space
@@ -238,6 +232,18 @@ int main(int argc, char* argv[]) {
 
     // Pass it to compute_all_differences
     auto diff_pairs = compute_all_differences(myarray, max_pairs);
+
+    // Print summary of successful differences
+    std::cout << "\n=== Summary ===" << std::endl;
+    std::cout << "Total successful differences found: " << diff_pairs.size() << std::endl;
+
+    // Only print individual pairs if not in quiet mode
+    if (!quiet) {
+        std::cout << "Successful (diff1, diff2) pairs:" << std::endl;
+        for (const auto& pair : diff_pairs) {
+            std::cout << "  (0x" << std::hex << pair.first << ", 0x" << pair.second << ")" << std::dec << std::endl;
+        }
+    }
 
     // Print the hash of myarray
     uint32_t myseed = 0;
