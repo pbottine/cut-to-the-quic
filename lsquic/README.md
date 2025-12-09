@@ -2,13 +2,13 @@
 
 This directory contains a proof-of-concept differential cryptanalysis attack against the XXHash32 hash function originally used in LiteSpeed's [`lsquic`](https://github.com/litespeedtech/lsquic) implementation (prior to version 1.8.2).
 
-## Vulnerability Status
-
-**Note**: This vulnerability has been responsibly disclosed to the `lsquic` maintainers and has been fixed in recent versions of `lsquic`. This proof-of-concept is provided for educational purposes to help security researchers understand differential cryptanalysis techniques against non-cryptographic hash functions.
-
 ## Overview
 
-The attack applies differential cryptanalysis techniques to find input differences that produce hash collisions. By systematically searching through differential characteristics and reversing hash operations, the attack can generate numerous colliding inputs that degrade hash table performance.
+The attack applies differential cryptanalysis techniques to find input differences that produce hash collisions. Given a starting 8-byte array `A || B` and its corresponding hash, the attack finds pairs of differentials `(D1, D2)` such that `XXHash32(A||B) = XXHash32(A+D1||B+D2)` by
+
+1. Iterating through the 32-bit search space to generate a first differential `D1`
+2. Compute `D2` by reversing the hash operation from the target hash
+3. Testing whether the `(D1, D2)` pair produces a hash collisions across random seeds
 
 ## Requirements
 
@@ -54,18 +54,6 @@ When using `--test`, the program verifies that all found differentials produce a
 - Exit code 0: All tests passed
 - Exit code 1: Some tests failed
 
-This is useful for CI/CD pipelines and validating that the attack works correctly.
-
-## Implementation Details
-
-The attack works by:
-
-1. **Reversing hash operations**: Computing what input chunk is needed to reach a target hash value from an intermediate state
-2. **Testing differentials**: Verifying that input differences produce consistent hash collisions across random inputs and seeds
-3. **Systematic search**: Iterating through the 32-bit difference space to find all valid differentials
-
-The implementation uses modular inverses of XXHash32 constants to reverse hash rounds, enabling precise control over intermediate states.
-
 ## Files
 
 - `diff_crypt.cpp` - Main attack implementation that finds and verifies differential characteristics
@@ -73,12 +61,6 @@ The implementation uses modular inverses of XXHash32 constants to reverse hash r
   - `hash_single_round()` - Instance method that computes hash with only a single round
   - `hash_single_round(input, length, seed)` - Static wrapper for single round computation
   - Modifications are clearly marked between `// NEW CODE` and `// END NEW CODE` comments
-
-## Target
-
-- **Implementation**: LiteSpeed `lsquic` (XXHash32)
-- **Attack Type**: Differential cryptanalysis
-- **Impact**: Hash table performance degradation leading to denial of service
 
 ## Licensing
 

@@ -253,14 +253,14 @@ int main(int argc, char* argv[]) {
         for (const auto& pair : diff_pairs) {
             uint8_t modified_array[8];
             apply_diffs_to_array(myarray, pair.first, pair.second, modified_array);
-            uint32_t modified_hash = XXHash32::hash(modified_array, 8, myseed);
+            uint32_t new_hash = XXHash32::hash(modified_array, 8, myseed);
 
-            if (modified_hash == original_hash) {
+            if (new_hash == original_hash) {
                 passed++;
             } else {
                 failed++;
                 std::cout << "  FAILED: Diff (0x" << std::hex << pair.first << ", 0x" << pair.second
-                         << ") -> Hash: 0x" << modified_hash << " != 0x" << original_hash << std::dec << std::endl;
+                         << ") -> Hash: 0x" << new_hash << " != 0x" << original_hash << std::dec << std::endl;
             }
         }
 
