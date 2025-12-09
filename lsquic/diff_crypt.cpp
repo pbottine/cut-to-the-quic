@@ -1,5 +1,5 @@
 // diff_crypt.cpp
-// Differential cryptanalysis attack on XXHash32 (LSQUIC hash function)
+// Differential cryptanalysis attack on XXHash32 (`lsquic` hash function)
 // Author: Paul Bottinelli
 // For Black Hat EU 2025 - Cut to the QUIC: Slashing QUIC's Performance with a Hash DoS
 //

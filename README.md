@@ -1,22 +1,17 @@
 # QUIC Hash DoS Attack Code
 
-Proof-of-concept implementations demonstrating hash collision attacks against QUIC implementations, presented at Black Hat Europe 2025.
-
-## Talk Information
-
-**Cut to the QUIC: Slashing QUIC's Performance with a Hash DoS**
-Black Hat Europe 2025
-[Talk Details](https://www.blackhat.com/eu-25/briefings/schedule/index.html#cut-to-the-quic-slashing-quics-performance-with-a-hash-dos-48330)
+Proof-of-concept implementations of three attacks generating collisions on non-cryptographic hash functions used in several QUIC implementations, presented at Black Hat Europe 2025 as part of the talk
+[**Cut to the QUIC: Slashing QUIC's Performance with a Hash DoS**](https://www.blackhat.com/eu-25/briefings/schedule/index.html#cut-to-the-quic-slashing-quics-performance-with-a-hash-dos-48330) and following a [coordinated disclosure in February 2025](https://github.com/ncc-pbottine/QUIC-Hash-Dos-Advisory).
 
 ## Overview
 
-This repository contains proof-of-concept code demonstrating hash collision attacks against QUIC implementations:
+This repository contains proof-of-concept implementations of different methods to generate collisions on non-cryptographic hash functions used in several QUIC implementations:
 
-### 1. xquic - Equivalent Substring Attack
-A Python script that exploits the hash function used in Alibaba's XQUIC implementation through equivalent substring collision generation.
+### 1. `xquic` - Equivalent Substring Attack
+A Python script that exploits the hash function used in Alibaba's `xquic` implementation (used in version 1.8.1 and all earlier versions) through equivalent substring collision generation.
 
-### 2. lsquic - Differential Cryptanalysis Attack
-C++ code implementing a differential cryptanalysis attack against the XXHash32 hash function in LiteSpeed's LSQUIC implementation.
+### 2. `lsquic` - Differential Cryptanalysis Attack
+C++ code implementing a differential cryptanalysis attack against the XXHash32 hash function in LiteSpeed's `lsquic` implementation (used in version 4.0.12 and all earlier versions).
 
 ### 3. multiplicative-hash-mitm - Generic Meet-in-the-Middle Attack
 A generic meet-in-the-middle attack implementation targeting 32-bit multiplicative hash functions.
@@ -24,14 +19,10 @@ A generic meet-in-the-middle attack implementation targeting 32-bit multiplicati
 ## Vulnerability Status
 
 **Note**: The vulnerabilities demonstrated in this repository have been responsibly disclosed and patched:
-- **XQUIC**: Vulnerability fixed in recent versions
-- **LSQUIC**: Vulnerability fixed in recent versions
+- **`xquic`**: Vulnerability fixed in version 1.8.2.
+- **`lsquic`**: Vulnerability fixed in version 4.2.0.
 
 This code is provided for educational purposes and to help security researchers understand these attack techniques.
-
-## Disclaimer
-
-This code is intended for educational and defensive security research purposes only. Do not use these techniques for malicious purposes or against systems you do not own or have explicit permission to test.
 
 ## Repository Structure
 

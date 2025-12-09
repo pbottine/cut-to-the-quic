@@ -1,10 +1,10 @@
-# LSQUIC Differential Cryptanalysis Attack
+# `lsquic` Differential Cryptanalysis Attack
 
-This directory contains a proof-of-concept differential cryptanalysis attack against the XXHash32 hash function used in LiteSpeed's LSQUIC implementation.
+This directory contains a proof-of-concept differential cryptanalysis attack against the XXHash32 hash function originally used in LiteSpeed's [`lsquic`](https://github.com/litespeedtech/lsquic) implementation (prior to version 1.8.2).
 
 ## Vulnerability Status
 
-**Note**: This vulnerability has been responsibly disclosed to the LSQUIC maintainers and has been fixed in recent versions of LSQUIC. This proof-of-concept is provided for educational purposes to help security researchers understand differential cryptanalysis techniques against non-cryptographic hash functions.
+**Note**: This vulnerability has been responsibly disclosed to the `lsquic` maintainers and has been fixed in recent versions of `lsquic`. This proof-of-concept is provided for educational purposes to help security researchers understand differential cryptanalysis techniques against non-cryptographic hash functions.
 
 ## Overview
 
@@ -76,7 +76,7 @@ The implementation uses modular inverses of XXHash32 constants to reverse hash r
 
 ## Target
 
-- **Implementation**: LiteSpeed LSQUIC (XXHash32)
+- **Implementation**: LiteSpeed `lsquic` (XXHash32)
 - **Attack Type**: Differential cryptanalysis
 - **Impact**: Hash table performance degradation leading to denial of service
 
