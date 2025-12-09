@@ -18,14 +18,3 @@ Generate colliding inputs using the provided Python script:
 python3 gen_collisions.py
 ```
 
-The script generates all 6-length permutations of carefully chosen 2-byte hex strings that produce hash collisions. These colliding inputs can be used to trigger worst-case performance in `xquic`'s hash table implementation.
-
-## Implementation Details
-
-The attack uses a set of 2-byte hex values that have been identified to create equivalent substrings under `xquic`'s hash function. By combining these values in different permutations, we can generate numerous inputs that all hash to the same value.
-
-## Target
-
-- **Implementation**: Alibaba `xquic`
-- **Attack Type**: Equivalent substring collision
-- **Impact**: Hash table performance degradation leading to denial of service

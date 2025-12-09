@@ -1,14 +1,14 @@
 # QUIC Hash DoS Attack Code
 
-Proof-of-concept implementations of three attacks generating collisions on non-cryptographic hash functions used in several QUIC implementations, presented at Black Hat Europe 2025 as part of the talk
-[**Cut to the QUIC: Slashing QUIC's Performance with a Hash DoS**](https://www.blackhat.com/eu-25/briefings/schedule/index.html#cut-to-the-quic-slashing-quics-performance-with-a-hash-dos-48330) and following a [coordinated disclosure in February 2025](https://github.com/ncc-pbottine/QUIC-Hash-Dos-Advisory).
+Proof-of-concept implementations of three attacks to generate collisions on non-cryptographic hash functions used in several QUIC implementations, presented at Black Hat Europe 2025 as part of the talk
+[**Cut to the QUIC: Slashing QUIC's Performance with a Hash DoS**](https://www.blackhat.com/eu-25/briefings/schedule/index.html#cut-to-the-quic-slashing-quics-performance-with-a-hash-dos-48330) and following a [coordinated disclosure effort in February 2025](https://github.com/ncc-pbottine/QUIC-Hash-Dos-Advisory).
 
 ## Overview
 
 This repository contains proof-of-concept implementations of different methods to generate collisions on non-cryptographic hash functions used in several QUIC implementations:
 
 ### 1. `xquic` - Equivalent Substring Attack
-A Python script that exploits the hash function used in Alibaba's `xquic` implementation (used in version 1.8.1 and all earlier versions) through equivalent substring collision generation.
+A Python script that generates collisions for the hash function used in Alibaba's `xquic` implementation (used in version 1.8.1 and all earlier versions) through an equivalent substring attack.
 
 ### 2. `lsquic` - Differential Cryptanalysis Attack
 C++ code implementing a differential cryptanalysis attack against the XXHash32 hash function in LiteSpeed's `lsquic` implementation (used in version 4.0.12 and all earlier versions).

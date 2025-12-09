@@ -4,10 +4,10 @@ This directory contains a proof-of-concept differential cryptanalysis attack aga
 
 ## Overview
 
-The attack applies differential cryptanalysis techniques to find input differences that produce hash collisions. Given a starting 8-byte array `A || B` and its corresponding hash, the attack finds pairs of differentials `(D1, D2)` such that `XXHash32(A||B) = XXHash32(A+D1||B+D2)` by
+The attack applies differential cryptanalysis techniques to find input differences that produce hash collisions. Given a starting 8-byte array `A || B` and its corresponding hash, the attack finds pairs of differentials `(D1, D2)` such that `XXHash32(A||B) = XXHash32(A+D1||B+D2)` by:
 
 1. Iterating through the 32-bit search space to generate a first differential `D1`
-2. Compute `D2` by reversing the hash operation from the target hash
+2. Computing `D2` by reversing the hash operation from the target hash
 3. Testing whether the `(D1, D2)` pair produces a hash collisions across random seeds
 
 ## Requirements

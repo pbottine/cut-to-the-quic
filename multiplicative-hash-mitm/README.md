@@ -73,5 +73,3 @@ The meet-in-the-middle attack exploits the structure of multiplicative hash func
 1. **Precomputation phase**: Generate a table of `2^(suffix_size*8)` hash values by computing the hash backwards from a target value
 2. **Search phase**: Generate random prefixes and compute their forward hash values until one matches an entry in the precomputed table
 3. **Collision found**: Concatenate the matching prefix and suffix to create a collision
-
-This approach trades memory for time, making collision generation practical even for 32-bit hash functions.
