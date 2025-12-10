@@ -37,7 +37,7 @@ python3 generic_mitm.py --interactive -n 500
 - `-s, --suffix`: Suffix size (affects memory usage) - default: `3`
 - `-i, --initial`: Initial hash value - default: `5387`
 - `-m, --multiplier`: Hash multiplier - default: `31`
-- `-n, --n-collisions`: Number of collisions to generate - default: `10`
+- `-n, --n-collisions`: Number of collisions to generate - default: `10`, upper bound: 2^32. Note that the upper-bound is a theoretical bound on the search space; fewer collisions will be found.
 - `--interactive`: Enable progress bar
 
 ### As a Python Module

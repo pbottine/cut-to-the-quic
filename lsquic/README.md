@@ -1,6 +1,6 @@
 # `lsquic` Differential Cryptanalysis Attack
 
-This directory contains a proof-of-concept differential cryptanalysis attack against the XXHash32 hash function originally used in LiteSpeed's [`lsquic`](https://github.com/litespeedtech/lsquic) implementation (prior to version 1.8.2).
+This directory contains a proof-of-concept differential cryptanalysis attack against the XXHash32 hash function originally used in LiteSpeed's [`lsquic`](https://github.com/litespeedtech/lsquic) implementation (prior to version 4.2.0).
 
 ## Overview
 
@@ -52,7 +52,7 @@ Generate differential pairs that produce collisions:
 
 #### Command Line Options
 
-- `[max_pairs]`: Maximum number of differential pairs to find (default: 100, upper bound: 2^32)
+- `[max_pairs]`: Maximum number of differential pairs to find (default: 100, upper bound: 2^32. Note that the upper-bound is a theoretical bound on the search space; fewer collisions will be found.)
 - `--test`: Run verification tests on found differentials and report pass/fail status
 - `--quiet` or `-q`: Print only the total count of pairs found, not individual pairs (useful for large collision sets)
 
