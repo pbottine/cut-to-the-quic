@@ -11,69 +11,76 @@
 #include <cstdint>
 #include <iomanip>
 #include <vector>
+#include <array>
 #include <utility>
-#include <cstdlib>
-#include <ctime>
+#include <random>
 #include <string>
+#include <algorithm>
 #include "xxhash32.h"
 
 // XXHash32 constants and their modular inverses (mod 2^32)
-const uint32_t Prime3 = 3266489917U;
-const uint32_t inv_Prime3 = 2828982549U;
-const uint32_t inv_Prime4 = 2701016015U;
+constexpr uint32_t Prime3 = 3266489917U;
+constexpr uint32_t inv_Prime3 = 2828982549U;
+constexpr uint32_t inv_Prime4 = 2701016015U;
 
 // Configuration constants
-const uint8_t NUM_VERIFICATION_TESTS = 20;     // Number of random tests per differential
-const size_t DEFAULT_MAX_PAIRS = 100;          // Default maximum pairs to collect
-const size_t PROGRESS_UPDATE_INTERVAL = 10000; // Progress bar update frequency
+constexpr uint8_t NUM_VERIFICATION_TESTS = 20;     // Number of random tests per differential
+constexpr size_t DEFAULT_MAX_PAIRS = 100;          // Default maximum pairs to collect
+constexpr size_t PROGRESS_UPDATE_INTERVAL = 10000; // Progress bar update frequency
+constexpr size_t ARRAY_SIZE = 8;                    // Size of input arrays
 
 // Rotate bits right (should compile to a single CPU instruction - ROR)
-static inline uint32_t rotateRight(uint32_t x, unsigned char bits)
-{
-  return (x >> bits) | (x << (32 - bits));
+inline constexpr uint32_t rotateRight(uint32_t x, unsigned char bits) noexcept {
+    return (x >> bits) | (x << (32 - bits));
 }
 
 // Convert 4-byte array to uint32_t (little-endian)
-static inline uint32_t bytes_to_uint32(const uint8_t* bytes)
-{
-  return (uint32_t)bytes[0] |
-         ((uint32_t)bytes[1] << 8) |
-         ((uint32_t)bytes[2] << 16) |
-         ((uint32_t)bytes[3] << 24);
+inline uint32_t bytes_to_uint32(const uint8_t* bytes) noexcept {
+    return static_cast<uint32_t>(bytes[0]) |
+           (static_cast<uint32_t>(bytes[1]) << 8) |
+           (static_cast<uint32_t>(bytes[2]) << 16) |
+           (static_cast<uint32_t>(bytes[3]) << 24);
 }
 
 // Convert uint32_t to 4-byte array (little-endian)
-static inline void uint32_to_bytes(uint32_t value, uint8_t* bytes)
-{
-  bytes[0] = (uint8_t)(value & 0xFF);
-  bytes[1] = (uint8_t)((value >> 8) & 0xFF);
-  bytes[2] = (uint8_t)((value >> 16) & 0xFF);
-  bytes[3] = (uint8_t)((value >> 24) & 0xFF);
+inline std::array<uint8_t, 4> uint32_to_bytes(uint32_t value) noexcept {
+    return {
+        static_cast<uint8_t>(value & 0xFF),
+        static_cast<uint8_t>((value >> 8) & 0xFF),
+        static_cast<uint8_t>((value >> 16) & 0xFF),
+        static_cast<uint8_t>((value >> 24) & 0xFF)
+    };
 }
 
 // Print uint8 array in hexadecimal format
-static inline void print_uint8_array(const uint8_t* array, size_t length)
-{
-  for (size_t i = 0; i < length; i++) {
-    printf("%02x ", array[i]);
-  }
-  printf("\n");
+inline void print_uint8_array(const uint8_t* array, size_t length) {
+    for (size_t i = 0; i < length; ++i) {
+        std::cout << std::hex << std::setw(2) << std::setfill('0')
+                  << static_cast<int>(array[i]) << " ";
+    }
+    std::cout << std::dec << std::endl;
 }
 
 // Apply differences to 8-byte array (first diff to first 4 bytes, second diff to last 4 bytes)
-static inline void apply_diffs_to_array(const uint8_t* input, uint32_t diff1, uint32_t diff2, uint8_t* output)
-{
-  // Apply diff1 to first 4 bytes
-  uint32_to_bytes(bytes_to_uint32(input) + diff1, output);
+inline std::array<uint8_t, ARRAY_SIZE> apply_diffs_to_array(
+    const uint8_t* input, uint32_t diff1, uint32_t diff2) noexcept {
 
-  // Apply diff2 to last 4 bytes
-  uint32_to_bytes(bytes_to_uint32(&input[4]) + diff2, &output[4]);
+    std::array<uint8_t, ARRAY_SIZE> output;
+
+    // Apply diff1 to first 4 bytes
+    auto first_bytes = uint32_to_bytes(bytes_to_uint32(input) + diff1);
+    std::copy(first_bytes.begin(), first_bytes.end(), output.begin());
+
+    // Apply diff2 to last 4 bytes
+    auto last_bytes = uint32_to_bytes(bytes_to_uint32(&input[4]) + diff2);
+    std::copy(last_bytes.begin(), last_bytes.end(), output.begin() + 4);
+
+    return output;
 }
 
 // Compute the chunk value needed to reach target hash from a given intermediate state
 // This reverses one round of XXHash32 computation
-uint32_t back_round_for_chunk(uint32_t target, uint32_t middle_value)
-{
+inline uint32_t back_round_for_chunk(uint32_t target, uint32_t middle_value) noexcept {
     uint32_t result = target * inv_Prime4;
     result = rotateRight(result, 17);
     return (result - middle_value) * inv_Prime3;
@@ -81,100 +88,99 @@ uint32_t back_round_for_chunk(uint32_t target, uint32_t middle_value)
 
 // Function to display the progress bar
 void show_progress(uint64_t current, uint64_t total, int n_found, int bar_length = 40) {
-    double progress = static_cast<double>(current) / total;
-    int pos = static_cast<int>(progress * bar_length);
+    const double progress = static_cast<double>(current) / total;
+    const int pos = static_cast<int>(progress * bar_length);
 
     std::cout << "\rProgress: [";
     for (int i = 0; i < bar_length; ++i) {
-        if (i < pos) std::cout << "#";
-        else std::cout << "-";
+        std::cout << (i < pos ? '#' : '-');
     }
-    std::cout << "] " << std::fixed << std::setprecision(2) << (progress * 100) << "%" << " (found " << n_found << ")";
+    std::cout << "] " << std::fixed << std::setprecision(2)
+              << (progress * 100.0) << "% (found " << n_found << ")";
     std::cout.flush();
 }
 
 
 // Test a differential hypothesis multiple times with random inputs and seeds
-// Returns 0 if all tests produce collisions, -1 if any test fails
+// Returns true if all tests produce collisions, false if any test fails
 // Note: Tests n different seeds, with n random inputs per seed (total n*n tests)
-int test_single_hypothesis_n_times(uint32_t diff1, uint32_t diff2, uint8_t n)
-{
-    for (size_t j = 0; j < n; j++)
-    {
+bool test_single_hypothesis_n_times(uint32_t diff1, uint32_t diff2, uint8_t n,
+                                    std::mt19937& rng) {
+    std::uniform_int_distribution<uint32_t> dist(0, 255);
+
+    for (size_t j = 0; j < n; ++j) {
         // Generate random seed
-        uint8_t seed_array[4];
-        for (int k = 0; k < 4; k++) {
-            seed_array[k] = rand() & 0xFF;
+        std::array<uint8_t, 4> seed_array;
+        for (auto& byte : seed_array) {
+            byte = static_cast<uint8_t>(dist(rng));
         }
-        uint32_t seed = bytes_to_uint32(seed_array);
+        const uint32_t seed = bytes_to_uint32(seed_array.data());
 
         // Test n times with different random inputs
-        for (size_t i = 0; i < n; i++)
-        {
+        for (size_t i = 0; i < n; ++i) {
             // Generate random 8-byte array
-            uint8_t array1[8];
-            for (int k = 0; k < 8; k++) {
-                array1[k] = rand() & 0xFF;
+            std::array<uint8_t, ARRAY_SIZE> array1;
+            for (auto& byte : array1) {
+                byte = static_cast<uint8_t>(dist(rng));
             }
 
             // Compute its hash
-            uint32_t hash_result = XXHash32::hash_no_final_bit_mixing(array1, 8, seed);
+            const uint32_t hash_result = XXHash32::hash_no_final_bit_mixing(
+                array1.data(), ARRAY_SIZE, seed);
 
             // Apply diffs to array1
-            uint8_t array2[8];
-            apply_diffs_to_array(array1, diff1, diff2, array2);
-            
+            const auto array2 = apply_diffs_to_array(array1.data(), diff1, diff2);
+
             // Compute its hash
-            uint32_t hash_result2 = XXHash32::hash_no_final_bit_mixing(array2, 8, seed);
+            const uint32_t hash_result2 = XXHash32::hash_no_final_bit_mixing(
+                array2.data(), ARRAY_SIZE, seed);
 
             if (hash_result != hash_result2) {
-                return -1;
+                return false;
             }
         }
     }
 
-    // Success
-    return 0;
+    return true;
 }
 
 // Search for differential characteristics that produce hash collisions
 // Returns a vector of (diff1, diff2) pairs that create collisions
-std::vector<std::pair<uint32_t, uint32_t>> compute_all_differences(const uint8_t* input_array, size_t max_pairs)
-{
-    uint32_t myseed = 0;
+std::vector<std::pair<uint32_t, uint32_t>> compute_all_differences(
+    const uint8_t* input_array, size_t max_pairs, std::mt19937& rng) {
 
-    // Array to store successful (diff1, diff2) tuples
+    constexpr uint32_t myseed = 0;
     std::vector<std::pair<uint32_t, uint32_t>> successful_diffs;
+    successful_diffs.reserve(max_pairs);
 
-    uint32_t last_four_bytes = bytes_to_uint32(&input_array[4]);
+    const uint32_t last_four_bytes = bytes_to_uint32(&input_array[4]);
+    const uint32_t hash_result = XXHash32::hash_no_final_bit_mixing(
+        input_array, ARRAY_SIZE, myseed);
 
-    uint32_t hash_result = XXHash32::hash_no_final_bit_mixing(input_array, 8, myseed);
-
-    uint32_t total_loop = 4294967295;  // Search through all possible 32-bit differences
+    constexpr uint32_t total_loop = 4294967295U;  // Search through all possible 32-bit differences
     uint32_t total_count = 0;
 
-    for (size_t i = 1; i < total_loop; i++)
-    {
-        uint32_t diff = i;
-        uint32_t m1 = bytes_to_uint32(input_array) + diff;
+    for (size_t i = 1; i < total_loop; ++i) {
+        const uint32_t diff = static_cast<uint32_t>(i);
+        const uint32_t m1 = bytes_to_uint32(input_array) + diff;
 
         // Note: We pass length=8 even though the array is 4 bytes
         // The length parameter is used for hash state initialization, not for reading
         // The function only reads what's actually in the buffer (4 bytes)
-        uint8_t m1_bytes[] = {0x00, 0x00, 0x00, 0x00};
-        uint32_to_bytes(m1, m1_bytes);
-        uint32_t intermediate_hash = XXHash32::hash_single_round(m1_bytes, 8, myseed);
+        const auto m1_bytes = uint32_to_bytes(m1);
+        const uint32_t intermediate_hash = XXHash32::hash_single_round(
+            m1_bytes.data(), ARRAY_SIZE, myseed);
 
-        uint32_t chunk = back_round_for_chunk(hash_result, intermediate_hash);
-        uint32_t diff2 = chunk - last_four_bytes;
+        const uint32_t chunk = back_round_for_chunk(hash_result, intermediate_hash);
+        const uint32_t diff2 = chunk - last_four_bytes;
 
         // Test if this differential produces collisions with random inputs
-        if (test_single_hypothesis_n_times(diff, diff2, NUM_VERIFICATION_TESTS) == 0) {
-            total_count++;
+        if (test_single_hypothesis_n_times(diff, diff2, NUM_VERIFICATION_TESTS, rng)) {
+            ++total_count;
 
             // Collect up to max_pairs successful pairs
             if (successful_diffs.size() < max_pairs) {
-                successful_diffs.push_back(std::make_pair(diff, diff2));
+                successful_diffs.emplace_back(diff, diff2);
             } else {
                 break;  // Stop once we have enough pairs
             }
@@ -217,21 +223,23 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Searching for up to " << max_pairs << " differential pairs..." << std::endl;
 
-    // Seed the random number generator with current time
-    srand(time(NULL));
+    // Initialize C++11 random number generator
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::uniform_int_distribution<uint32_t> dist(0, 255);
 
     // Generate random 8-byte array
-    uint8_t myarray[8];
-    for (int i = 0; i < 8; i++) {
-        myarray[i] = rand() & 0xFF;
+    std::array<uint8_t, ARRAY_SIZE> myarray;
+    for (auto& byte : myarray) {
+        byte = static_cast<uint8_t>(dist(rng));
     }
 
     // Print the original array
     std::cout << "Original array: ";
-    print_uint8_array(myarray, 8);
+    print_uint8_array(myarray.data(), ARRAY_SIZE);
 
     // Pass it to compute_all_differences
-    auto diff_pairs = compute_all_differences(myarray, max_pairs);
+    auto diff_pairs = compute_all_differences(myarray.data(), max_pairs, rng);
 
     // Print summary of successful differences
     std::cout << "\n=== Summary ===" << std::endl;
@@ -246,8 +254,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Print the hash of myarray
-    uint32_t myseed = 0;
-    uint32_t original_hash = XXHash32::hash(myarray, 8, myseed);
+    constexpr uint32_t myseed = 0;
+    const uint32_t original_hash = XXHash32::hash(myarray.data(), ARRAY_SIZE, myseed);
     std::cout << "\nOriginal hash: 0x" << std::hex << original_hash << std::dec << std::endl;
 
     // Test mode: verify collisions with applied differentials
@@ -257,9 +265,8 @@ int main(int argc, char* argv[]) {
         size_t failed = 0;
 
         for (const auto& pair : diff_pairs) {
-            uint8_t modified_array[8];
-            apply_diffs_to_array(myarray, pair.first, pair.second, modified_array);
-            uint32_t new_hash = XXHash32::hash(modified_array, 8, myseed);
+            const auto modified_array = apply_diffs_to_array(myarray.data(), pair.first, pair.second);
+            const uint32_t new_hash = XXHash32::hash(modified_array.data(), ARRAY_SIZE, myseed);
 
             if (new_hash == original_hash) {
                 passed++;
